@@ -189,7 +189,7 @@ def length_plot(sensor_info, data_dict):
         if sensor_info[i][1] == 1:
             if sensor_info[i][4] != 'None':
                 distances.setdefault(sensor_info[i][0], sensor_info[i][4])
-    fig_l, ax_l = plt.subplots()
+    #fig_l, ax_l = plt.subplots()
     plt.figure(figsize=(20, 10))
     for i in range(len(data_dict[400])):
         x_val, y_val = [], []
