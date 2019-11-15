@@ -52,11 +52,11 @@ def find_max(xval, yval, n=4):
 
 
 def atma_to_mpa(p):
-    return (0.980665 * p)*1000
+    return (0.980665 * p) * 1000
 
 
 def atmo_to_mpa(p):
-    return (0.980665 * p + 0.980665)*1000
+    return (0.980665 * p + 0.980665) * 1000
 
 
 def area(d):
@@ -183,21 +183,36 @@ def solver(data_dict):
     return p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list
 
 
-def mult_plot(graph):
+def mult_plot(graph, sensor_info, data_dict):
     for k, v in graph.items():
-        fig, ax = plt.subplots()
-        # if k in maximize:
-        #     max_arg, max_value = find_max(v[0], v[1])
-        #     ax.scatter(max_arg, max_value, color='purple', s=80)
-        # plt.plot(v[0], v[1], color='black')
-        plt.scatter(v[2], v[3], color='black', marker='x', s=13, label='Нестационарные точки')
-        plt.scatter(v[0], v[1], color='red', marker='o', label='Осредненные стационарные точки')
-        plt.xlabel(k[0])
-        plt.ylabel(k[1], rotation=90)
-        plt.title(k[2])
-        plt.grid()
-        for i in range(len(v[0])):
-            plt.text(v[0][i] - 0.01 * (max(v[0]) - min(v[0])), v[1][i] + 0.06 * (max(v[1]) - min(v[1])), str(i + 1))
+        if k != (r'$p_{04}$, кПа', r'Коэффициент эжекции, k', 'Зависимость коэффициента эжекции от давления'):
+            fig, ax = plt.subplots()
+            plt.scatter(v[2], v[3], color='black', marker='x', s=13, label='Нестационарные точки')
+            plt.scatter(v[0], v[1], color='red', marker='o', label='Осредненные стационарные точки')
+            plt.xlabel(k[0])
+            plt.ylabel(k[1], rotation=90)
+            plt.title(k[2])
+            plt.grid()
+            for i in range(len(v[0])):
+                plt.text(v[0][i] - 0.01 * (max(v[0]) - min(v[0])), v[1][i] + 0.06 * (max(v[1]) - min(v[1])), str(i + 1))
+    length_plot(sensor_info, data_dict)
+
+
+def throttle_plot(graph, sensor_info, data_dict):
+    throttle_ch = (r'$p_{04}$, кПа', r'Коэффициент эжекции, k', 'Зависимость коэффициента эжекции от давления')
+    plt.scatter(graph[throttle_ch][2], graph[throttle_ch][3], color='black', marker='x', s=13,
+                label='Нестационарные точки')
+    plt.scatter(graph[throttle_ch][0], graph[throttle_ch][1], color='red', marker='o',
+                label='Осредненные стационарные точки')
+    plt.xlabel(throttle_ch[0])
+    plt.ylabel(throttle_ch[1], rotation=90)
+    plt.title(throttle_ch[2])
+    plt.grid()
+    for i in range(len(graph[throttle_ch][0])):
+        plt.text(graph[throttle_ch][0][i] - 0.01 * (max(graph[throttle_ch][0]) - min(graph[throttle_ch][0])),
+                 graph[throttle_ch][1][i] + 0.06 * (max(graph[throttle_ch][1]) - min(graph[throttle_ch][1])),
+                 str(i + 1))
+    length_plot(sensor_info, data_dict)
 
 
 def length_plot(sensor_info, data_dict):
@@ -261,14 +276,20 @@ if __name__ == '__main__':
 
     graph = {
         (r'$p_{04}$, кПа', r'Коэффициент эжекции, k', 'Зависимость коэффициента эжекции от давления'): (
-            ej_coeff_list, p_02, ej_coeff_list_tns, p_02_tns, ),
+            ej_coeff_list, p_02, ej_coeff_list_tns, p_02_tns),
         (r'$p_{04}$, кПа', r'$p_{02}$, кПа', 'Title_2'): (p_04, p_02, p_04_tns, p_02_tns),
         (r'$p_{04}$, кПа', r'$\varepsilon$', 'Title_3'): (p_04, comp_ratio_list, p_04_tns, comp_ratio_list_tns),
         (r'$p_{04}$, кПа', r'$\eta$', 'Title_4'): (p_04, eff_list, p_04_tns, eff_list_tns)
     }  # Оси и легенды графиков 1-4
 
     maximize = ((r'$p_{04}$, МПа', r'$\varepsilon$', 'Title_3'), (r'$p_{04}$, МПа', r'$\eta$', 'Title_4'))
+    checkbox = 'mass_flow'
+    if checkbox == 'throttle':
+        throttle_plot(graph, sensor_info, data_dict)
+    elif checkbox == 'mass_flow':
+        mult_plot(graph, sensor_info, data_dict)
+    else:
+        print('did not find')
 
-    mult_plot(graph)
-    length_plot(sensor_info, data_dict)
+    # plt.show()
     pdf_saver(r'./result_plot.pdf')
