@@ -34,6 +34,8 @@ import matplotlib.pyplot as plt
 import matplotlib.backends.backend_pdf
 import scipy.optimize as opt
 import os
+from conversion import RateGraph as RG
+import sensor_class
 
 
 def find_max(xval, yval, n=4):
@@ -42,16 +44,32 @@ def find_max(xval, yval, n=4):
     return max_x, np.polyval(array, max_x)
 
 
+# def set_sensor_instance(path):
+#     sensor_info = (opener(r'./sensor_status')).T
+#     sensors = list()
+#     for i in range(len(sensor_info)):
+#         sensors.append(Sensor(*sensor_info[i]))
+
+
 def atma_to_mpa(p):
-    return 0.1 * p
+    return (0.980665 * p)*1000
 
 
 def atmo_to_mpa(p):
-    return 0.1 * p + 0.1
+    return (0.980665 * p + 0.980665)*1000
 
 
 def area(d):
     return np.pi * d * d / 4 * pow(10, -6)
+
+
+def converter(magnitude, unit_of_measurment):
+    rates = [['atma', 'atmg', (1, 1)],
+             ['atma', 'MPa', (0.1, 0)],
+             ['atmg', 'MPa', (0.1, 0.1)]]
+    graph = RG(rates)
+    coefficients = graph.get_conversion(unit_of_measurment, 'kPa')
+    return coefficients[0] * (magnitude + coefficients[1])
 
 
 def mass_flow(mu, F, p, A, R, T):
@@ -171,7 +189,7 @@ def mult_plot(graph):
         # if k in maximize:
         #     max_arg, max_value = find_max(v[0], v[1])
         #     ax.scatter(max_arg, max_value, color='purple', s=80)
-        plt.plot(v[0], v[1], color='black')
+        # plt.plot(v[0], v[1], color='black')
         plt.scatter(v[2], v[3], color='black', marker='x', s=13, label='Нестационарные точки')
         plt.scatter(v[0], v[1], color='red', marker='o', label='Осредненные стационарные точки')
         plt.xlabel(k[0])
@@ -189,7 +207,6 @@ def length_plot(sensor_info, data_dict):
         if sensor_info[i][1] == 1:
             if sensor_info[i][4] != 'None':
                 distances.setdefault(sensor_info[i][0], sensor_info[i][4])
-    #fig_l, ax_l = plt.subplots()
     plt.figure(figsize=(20, 10))
     for i in range(len(data_dict[400])):
         x_val, y_val = [], []
@@ -197,16 +214,18 @@ def length_plot(sensor_info, data_dict):
             if k not in ('or', 100, 'marker') and k in (200, 400):
                 x_val.append(distances[k])
                 y_val.append(atma_to_mpa(data_dict[k][i]))
-                # ax_l.text(distances[k], atma_to_mpa(data_dict[k][i]), 's')
             elif k not in ('or', 100, 'marker'):
                 x_val.append(distances[k])
                 y_val.append(atma_to_mpa(data_dict[k][i]))
-                # ax_l.text(distances[k], atmo_to_mpa(data_dict[k][i]), 's')
+        if i % 2 == 0:
+            plt.text(1.01 * x_val[-1], 0.99 * y_val[-1], str(i + 1))
+        else:
+            plt.text(1.02 * x_val[-1], 0.99 * y_val[-1], str(i + 1))
+        plt.scatter(x_val, y_val, marker=i + 1)
         plt.plot(x_val, y_val)
-        plt.scatter(x_val, y_val, marker=i+1)
     plt.grid()
     plt.xlabel('L, мм')
-    plt.ylabel("p, МПа")
+    plt.ylabel("p, кПа")
 
 
 def pdf_saver(path):
@@ -241,10 +260,11 @@ if __name__ == '__main__':
     p_or_tns, p_01_tns, p_04_tns, p_02_tns, ej_coeff_list_tns, comp_ratio_list_tns, eff_list_tns = solver(trans)
 
     graph = {
-        (r'$p_{04}$, МПа', r'Коэффициент эжекции, k', 'Зависимость коэффициента эжекции от давления'): (p_04, ej_coeff_list, p_04_tns, ej_coeff_list_tns),
-        (r'$p_{04}$, МПа', r'$p_{02}$, МПа', 'Title_2'): (p_04, p_02, p_04_tns, p_02_tns),
-        (r'$p_{04}$, МПа', r'$\varepsilon$', 'Title_3'): (p_04, comp_ratio_list, p_04_tns, comp_ratio_list_tns),
-        (r'$p_{04}$, МПа', r'$\eta$', 'Title_4'): (p_04, eff_list, p_04_tns, eff_list_tns)
+        (r'$p_{04}$, кПа', r'Коэффициент эжекции, k', 'Зависимость коэффициента эжекции от давления'): (
+            ej_coeff_list, p_02, ej_coeff_list_tns, p_02_tns, ),
+        (r'$p_{04}$, кПа', r'$p_{02}$, кПа', 'Title_2'): (p_04, p_02, p_04_tns, p_02_tns),
+        (r'$p_{04}$, кПа', r'$\varepsilon$', 'Title_3'): (p_04, comp_ratio_list, p_04_tns, comp_ratio_list_tns),
+        (r'$p_{04}$, кПа', r'$\eta$', 'Title_4'): (p_04, eff_list, p_04_tns, eff_list_tns)
     }  # Оси и легенды графиков 1-4
 
     maximize = ((r'$p_{04}$, МПа', r'$\varepsilon$', 'Title_3'), (r'$p_{04}$, МПа', r'$\eta$', 'Title_4'))

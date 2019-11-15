@@ -16,12 +16,14 @@
 
 
 from PyQt5 import QtWidgets
+from PyQt5.QtGui import QIcon
 import rawsHandler as hdl
 
 
 class MyWindow(QtWidgets.QWidget):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QtWidgets.QWidget.__init__(self, parent)
+        self.setWindowIcon(QIcon(r'F:\Загрузки\ejector_project\ejector_raw\data.ico'))
 
         self.dataLabel = QtWidgets.QLabel('Data: ')
         self.sensorLabel = QtWidgets.QLabel('Sensor info: ')
@@ -80,11 +82,11 @@ class MyWindow(QtWidgets.QWidget):
         p_or_tns, p_01_tns, p_04_tns, p_02_tns, ej_coeff_list_tns, comp_ratio_list_tns, eff_list_tns = hdl.solver(trans)
 
         self.graph = {
-            (r'$p_{04}$, МПа', r'Коэффициент эжекции, k', 'Title_1'): (
-                p_04, ej_coeff_list, p_04_tns, ej_coeff_list_tns),
-            (r'$p_{04}$, МПа', r'$p_{02}$, МПа', 'Title_2'): (p_04, p_02, p_04_tns, p_02_tns),
-            (r'$p_{04}$, МПа', r'$\varepsilon$', 'Title_3'): (p_04, comp_ratio_list, p_04_tns, comp_ratio_list_tns),
-            (r'$p_{04}$, МПа', r'$\eta$', 'Title_4'): (p_04, eff_list, p_04_tns, eff_list_tns)
+            (r'Коэффициент эжекции, k', r'$p_{02}$, кПа',  'Title_1'): (
+                ej_coeff_list, p_02, ej_coeff_list_tns, p_02_tns),
+            (r'$p_{04}$, кПа', r'$p_{02}$, кПа', 'Title_2'): (p_04, p_02, p_04_tns, p_02_tns),
+            (r'$p_{04}$, кПа', r'$\varepsilon$', 'Title_3'): (p_04, comp_ratio_list, p_04_tns, comp_ratio_list_tns),
+            (r'$p_{04}$, кПа', r'$\eta$', 'Title_4'): (p_04, eff_list, p_04_tns, eff_list_tns)
         }  # Оси и легенды графиков 1-4
 
         # maximize = ((r'$p_{04}$, МПа', r'$\varepsilon$', 'Title_3'), (r'$p_{04}$, МПа', r'$\eta$', 'Title_4'))
