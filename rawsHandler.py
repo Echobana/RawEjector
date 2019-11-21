@@ -194,36 +194,39 @@ def comp_ratio_report(comp_ratio_list):
     return max(comp_ratio_list)
 
 
+def plot_ej(data_list, title_list):
+    default_plot(data_list, title_list)
+
+
 def efficiency_report(efficiency_list, pressure_list):
     max_efficiency = max(efficiency_list)
     max_efficiency_index = efficiency_list.index(max_efficiency)
     return max_efficiency, pressure_list[max_efficiency_index]
 
 
-def plot_ej(data_list, title_list):
-    default_plot(data_list, title_list)
-
-
 def plot_p04comp(data_list, title_list):
-    x_data = data_list[0] + data_list[2]
-    y_data = data_list[1] + data_list[3]
-    max_value = max(y_data)
-    max_value_index = y_data.index(max_value)
+    max_variable, max_value = data_max(data_list)
     text = r'$\varepsilon_{{max}}$={0:.2f}'.format(
         max_value) + '\n' + r'$p_{{04}}^{{\varepsilon_{{max}}}}$={0:.2f} кПа'.format(
-        x_data[max_value_index])
+        max_variable)
     default_plot(data_list, title_list, text=text)
 
 
 def plot_p04eff(data_list, title_list):
+    max_variable, max_value = data_max(data_list)
+    text = r'$\eta_{{max}}$={0:.2f}'.format(
+        max_value) + '\n' + r'$p_{{04}}^{{\eta_{{max}}}}$={0:.2f} кПа'.format(
+        max_variable)
+    default_plot(data_list, title_list, text=text)
+
+
+def data_max(data_list):
     x_data = data_list[0] + data_list[2]
     y_data = data_list[1] + data_list[3]
     max_value = max(y_data)
     max_value_index = y_data.index(max_value)
-    text = r'$\eta_{{max}}$={0:.2f}'.format(
-        max_value) + '\n' + r'$p_{{04}}^{{\eta_{{max}}}}$={0:.2f} кПа'.format(
-        x_data[max_value_index])
-    default_plot(data_list, title_list, text=text)
+    max_variable = x_data[max_value_index]
+    return max_variable, max_value
 
 
 def default_plot(data_list, title_list, text=''):
@@ -335,6 +338,7 @@ if __name__ == '__main__':
 
     max_comp_ratio = comp_ratio_report(comp_ratio_list_tns + comp_ratio_list)
     average_ej_coeff = ej_coeff_report(ej_coeff_list)
+    print(average_ej_coeff)
     max_efficiency, max_p_04 = efficiency_report(eff_list, p_04)
 
     maximize = ((r'$p_{04}$, МПа', r'$\varepsilon$', 'Title_3'), (r'$p_{04}$, МПа', r'$\eta$', 'Title_4'))
