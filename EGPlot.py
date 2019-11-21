@@ -27,15 +27,20 @@ class MyWindow(QtWidgets.QWidget):
 
         self.dataLabel = QtWidgets.QLabel('Data: ')
         self.sensorLabel = QtWidgets.QLabel('Sensor info: ')
+        self.parametersLabel = QtWidgets.QLabel('Parameters info: ')
 
         self.dataEdit = QtWidgets.QLineEdit(r"F:\ejector_raw_files\2")
         self.sensorEdit = QtWidgets.QLineEdit(r"F:\ejector_raw_files\sensor_status")
+        self.parametersEdit = QtWidgets.QLineEdit(r"F:\Загрузки\ejector_project\ejector_raw_files\parameters")
 
         self.dataBrowse = QtWidgets.QPushButton('Browse', self)
         self.dataBrowse.clicked.connect(self.btnDataClicked)
 
         self.sensorBrowse = QtWidgets.QPushButton('Browse', self)
         self.sensorBrowse.clicked.connect(self.btnSensorClicked)
+
+        self.parametersBrowse = QtWidgets.QPushButton('Browse', self)
+        self.parametersBrowse.clicked.connect(self.btnParametersClicked)
 
         self.solveBrowse = QtWidgets.QPushButton('Plot', self)
         self.solveBrowse.clicked.connect(self.btnSolveClicked)
@@ -53,15 +58,18 @@ class MyWindow(QtWidgets.QWidget):
         self.vbox_mid = QtWidgets.QVBoxLayout()
         self.vbox_mid.addWidget(self.dataLabel)
         self.vbox_mid.addWidget(self.sensorLabel)
+        self.vbox_mid.addWidget(self.parametersLabel)
         # self.vbox_mid.addWidget(self.checkboxLabel)
 
         self.vbox_left = QtWidgets.QVBoxLayout()
         self.vbox_left.addWidget(self.dataEdit)
         self.vbox_left.addWidget(self.sensorEdit)
+        self.vbox_left.addWidget(self.parametersEdit)
 
         self.vbox_right = QtWidgets.QVBoxLayout()
         self.vbox_right.addWidget(self.dataBrowse)
         self.vbox_right.addWidget(self.sensorBrowse)
+        self.vbox_right.addWidget(self.parametersBrowse)
 
         self.hbox_main.addLayout(self.vbox_mid)
         self.hbox_main.addLayout(self.vbox_left)
@@ -79,6 +87,10 @@ class MyWindow(QtWidgets.QWidget):
         fname = QtWidgets.QFileDialog.getOpenFileName(self)[0]
         self.sensorEdit.setText(fname)
 
+    def btnParametersClicked(self):
+        fname = QtWidgets.QFileDialog.getOpenFileName(self)[0]
+        self.dataEdit.setText(fname)
+
     def setType(self, pressed):
         source = self.sender()
 
@@ -95,12 +107,15 @@ class MyWindow(QtWidgets.QWidget):
     def btnSolveClicked(self):
         data = hdl.opener(self.dataEdit.text())
         sensor_info = hdl.opener(self.sensorEdit.text())
-        ver_data = hdl.verification(sensor_info.T, data)
+        parameters_file = self.parametersEdit.text()
 
+        params = hdl.set_experiment_parameters(parameters_file)
+        ver_data = hdl.verification(sensor_info.T, data)
         data_dict = hdl.av(ver_data)
-        p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list, m1_list, m2_list = hdl.solver(data_dict)
+        p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list, m1_list, m2_list = hdl.solver(data_dict, params)
         trans = hdl.transient(ver_data)
-        p_or_tns, p_01_tns, p_04_tns, p_02_tns, ej_coeff_list_tns, comp_ratio_list_tns, eff_list_tns, m1_list_tns, m2_list_tns = hdl.solver(trans)
+        p_or_tns, p_01_tns, p_04_tns, p_02_tns, ej_coeff_list_tns, comp_ratio_list_tns, eff_list_tns, m1_list_tns, m2_list_tns = hdl.solver(
+            trans, params)
 
         self.graph = {
             (r'Коэффициент эжекции, k', r'$p_{02}$, кПа', 'Title_1'): (
@@ -115,7 +130,6 @@ class MyWindow(QtWidgets.QWidget):
         # ax0.scatter(0, 1)
         # plt.show()
         hdl.mult_plot(self.graph, sensor_info, data_dict)
-        hdl.length_plot(sensor_info, data_dict)
         hdl.pdf_saver(r'./result.pdf')
 
         QtWidgets.qApp.quit()
