@@ -21,8 +21,8 @@ import rawsHandler as hdl
 
 
 class MyWindow(QtWidgets.QWidget):
-    def __init__(self, parent=None):
-        QtWidgets.QWidget.__init__(self, parent)
+    def __init__(self):
+        QtWidgets.QWidget.__init__(self)
         self.setWindowIcon(QIcon(r'F:\Загрузки\ejector_project\ejector_raw\data.ico'))
 
         self.dataLabel = QtWidgets.QLabel('Data: ')
@@ -42,13 +42,13 @@ class MyWindow(QtWidgets.QWidget):
         self.parametersBrowse = QtWidgets.QPushButton('Browse', self)
         self.parametersBrowse.clicked.connect(self.btnParametersClicked)
 
-        self.solveBrowse = QtWidgets.QPushButton('Plot', self)
-        self.solveBrowse.clicked.connect(self.btnSolveClicked)
 
-        self.throttle_btn = QtWidgets.QPushButton('Throttle')
-        self.massflow_btn = QtWidgets.QPushButton('Mass Flow')
-        self.massflow_btn.setCheckable(True)
-        self.throttle_btn.setCheckable(True)
+        self.save = QtWidgets.QPushButton('Save', self)
+        self.save.clicked.connect(self.btnSaveClicked)
+        # self.throttle_btn = QtWidgets.QPushButton('Throttle')
+        # self.massflow_btn = QtWidgets.QPushButton('Mass Flow')
+        # self.massflow_btn.setCheckable(True)
+        # self.throttle_btn.setCheckable(True)
         # self.throttle_btn.clicked[bool].connect(self.setType)
         # self.massflow_btn.clicked[bool].connect(self.setType)
 
@@ -75,7 +75,7 @@ class MyWindow(QtWidgets.QWidget):
         self.hbox_main.addLayout(self.vbox_left)
         self.hbox_main.addLayout(self.vbox_right)
         self.vbox_main.addLayout(self.hbox_main)
-        self.vbox_main.addWidget(self.solveBrowse)
+        self.vbox_main.addWidget(self.save)
 
         self.setLayout(self.vbox_main)
 
@@ -104,7 +104,9 @@ class MyWindow(QtWidgets.QWidget):
         elif source.text() == 'Mass Flow':
             self.col.setMassFlow(val)
 
-    def btnSolveClicked(self):
+
+    def btnSaveClicked(self):
+        fname = QtWidgets.QFileDialog.getSaveFileName(self)[0]
         data = hdl.opener(self.dataEdit.text())
         sensor_info = hdl.opener(self.sensorEdit.text())
         parameters_file = self.parametersEdit.text()
@@ -112,7 +114,8 @@ class MyWindow(QtWidgets.QWidget):
         params = hdl.set_experiment_parameters(parameters_file)
         ver_data = hdl.verification(sensor_info.T, data)
         data_dict = hdl.av(ver_data)
-        p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list, m1_list, m2_list = hdl.solver(data_dict, params)
+        p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list, m1_list, m2_list = hdl.solver(data_dict,
+                                                                                                        params)
         trans = hdl.transient(ver_data)
         p_or_tns, p_01_tns, p_04_tns, p_02_tns, ej_coeff_list_tns, comp_ratio_list_tns, eff_list_tns, m1_list_tns, m2_list_tns = hdl.solver(
             trans, params)
@@ -130,9 +133,9 @@ class MyWindow(QtWidgets.QWidget):
         # ax0.scatter(0, 1)
         # plt.show()
         hdl.mult_plot(self.graph, sensor_info, data_dict)
-        hdl.pdf_saver(r'./result.pdf')
-
+        hdl.pdf_saver(fname)
         QtWidgets.qApp.quit()
+
 
 
 if __name__ == '__main__':
@@ -141,6 +144,6 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     window = MyWindow()
     window.setWindowTitle("Program")
-    window.setFixedSize(350, 150)
+    window.setFixedSize(350, 200)
     window.show()
     sys.exit(app.exec_())

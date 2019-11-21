@@ -303,21 +303,21 @@ def set_experiment_parameters(parameters_file):
     params = []
     for line in parameters:
         params.append(line[1])
-    d_cr = params[0]
-    d_a = params[1]
-    alpha = params[2]
-    mu_nozzle = params[3]
-    d_cc = params[4]
-    l_cc = params[5]
-    alpha_2 = params[6]
-    d_out = params[7]
-    d_orifice = params[8]
-    mu_orifice = params[9]
-    T_01 = params[10]
-    T_02 = params[11]
-    k = 1.4
-    A_k = 0.685
-    R_air = 287
+    # d_cr = params[0]
+    # d_a = params[1]
+    # alpha = params[2]
+    # mu_nozzle = params[3]
+    # d_cc = params[4]
+    # l_cc = params[5]
+    # alpha_2 = params[6]
+    # d_out = params[7]
+    # d_orifice = params[8]
+    # mu_orifice = params[9]
+    # T_01 = params[10]
+    # T_02 = params[11]
+    # k = 1.4
+    # A_k = 0.685
+    # R_air = 287
     return params
 
 
