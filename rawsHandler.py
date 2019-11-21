@@ -52,11 +52,11 @@ def find_max(xval, yval, n=4):
 
 
 def atma_to_mpa(p):
-    return (0.980665 * p) * 1000
+    return (0.0980665 * p) * 1000
 
 
 def atmo_to_mpa(p):
-    return (0.980665 * p + 0.980665) * 1000
+    return (0.0980665 * p + 0.0980665) * 1000
 
 
 def area(d):
@@ -183,35 +183,86 @@ def solver(data_dict):
     return p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list
 
 
+def ej_coeff_report(ej_coeff_list):
+    sum = 0
+    for i in range(len(ej_coeff_list)):
+        sum += ej_coeff_list[i]
+    return sum / len(ej_coeff_list)
+
+
+def comp_ratio_report(comp_ratio_list):
+    return max(comp_ratio_list)
+
+
+def efficiency_report(efficiency_list, pressure_list):
+    max_efficiency = max(efficiency_list)
+    max_efficiency_index = efficiency_list.index(max_efficiency)
+    return max_efficiency, pressure_list[max_efficiency_index]
+
+
+def plot_ej(data_list, title_list):
+    default_plot(data_list, title_list)
+
+
+def plot_p04comp(data_list, title_list):
+    x_data = data_list[0] + data_list[2]
+    y_data = data_list[1] + data_list[3]
+    max_value = max(y_data)
+    max_value_index = y_data.index(max_value)
+    text = r'$\varepsilon_{{max}}$={0:.2f}'.format(
+        max_value) + '\n' + r'$p_{{04}}^{{\varepsilon_{{max}}}}$={0:.2f} кПа'.format(
+        x_data[max_value_index])
+    default_plot(data_list, title_list, text=text)
+
+
+def plot_p04eff(data_list, title_list):
+    x_data = data_list[0] + data_list[2]
+    y_data = data_list[1] + data_list[3]
+    max_value = max(y_data)
+    max_value_index = y_data.index(max_value)
+    text = r'$\eta_{{max}}$={0:.2f}'.format(
+        max_value) + '\n' + r'$p_{{04}}^{{\eta_{{max}}}}$={0:.2f} кПа'.format(
+        x_data[max_value_index])
+    default_plot(data_list, title_list, text=text)
+
+
+def default_plot(data_list, title_list, text=''):
+    fig, ax = plt.subplots()
+    plt.scatter(data_list[2], data_list[3], marker='x', s=13, color='black')
+    plt.scatter(data_list[0], data_list[1], marker='o', color='red')
+    plt.xlabel(title_list[0])
+    plt.ylabel(title_list[1])
+    plt.grid()
+    for i in range(len(data_list[0])):
+        plt.text(data_list[0][i] - 0.01 * (max(data_list[0]) - min(data_list[0])),
+                 data_list[1][i] + 0.06 * (max(data_list[1]) - min(data_list[1])), str(i + 1))
+    props = dict(boxstyle='round', facecolor='wheat')
+    plt.text(0.04, 0.9, text, ha='left', va='center', transform=ax.transAxes, bbox=props, fontsize='11')
+
+
+def plot_p04p02(data_list, title_list):
+    default_plot(data_list, title_list)
+
+
+def text():
+    fig, ax = plt.subplots()
+    ax.axis('off')
+    text = 'Параметры эксперимента:\n$\\varepsilon$'
+    plt.text(0., 1., text, ha='left', va='center', transform=ax.transAxes, fontsize='11')
+
+
 def mult_plot(graph, sensor_info, data_dict):
-    for k, v in graph.items():
-        if k != (r'$p_{04}$, кПа', r'Коэффициент эжекции, k', 'Зависимость коэффициента эжекции от давления'):
-            fig, ax = plt.subplots()
-            plt.scatter(v[2], v[3], color='black', marker='x', s=13, label='Нестационарные точки')
-            plt.scatter(v[0], v[1], color='red', marker='o', label='Осредненные стационарные точки')
-            plt.xlabel(k[0])
-            plt.ylabel(k[1], rotation=90)
-            plt.title(k[2])
-            plt.grid()
-            for i in range(len(v[0])):
-                plt.text(v[0][i] - 0.01 * (max(v[0]) - min(v[0])), v[1][i] + 0.06 * (max(v[1]) - min(v[1])), str(i + 1))
+    text()
+    plot_p04p02(graph[(r'$p_{04}$, кПа', r'$p_{02}$, кПа', 'Title_2')], (r'$p_{04}$, кПа', r'$p_{02}$, кПа', 'Title_2'))
+    plot_p04comp(graph[(r'$p_{04}$, кПа', r'$\varepsilon$', 'Title_3')],
+                 (r'$p_{04}$, кПа', r'$\varepsilon$', 'Title_3'))
+    plot_p04eff(graph[(r'$p_{04}$, кПа', r'$\eta$', 'Title_4')], (r'$p_{04}$, кПа', r'$\eta$', 'Title_4'))
     length_plot(sensor_info, data_dict)
 
 
 def throttle_plot(graph, sensor_info, data_dict):
-    throttle_ch = (r'$p_{04}$, кПа', r'Коэффициент эжекции, k', 'Зависимость коэффициента эжекции от давления')
-    plt.scatter(graph[throttle_ch][2], graph[throttle_ch][3], color='black', marker='x', s=13,
-                label='Нестационарные точки')
-    plt.scatter(graph[throttle_ch][0], graph[throttle_ch][1], color='red', marker='o',
-                label='Осредненные стационарные точки')
-    plt.xlabel(throttle_ch[0])
-    plt.ylabel(throttle_ch[1], rotation=90)
-    plt.title(throttle_ch[2])
-    plt.grid()
-    for i in range(len(graph[throttle_ch][0])):
-        plt.text(graph[throttle_ch][0][i] - 0.01 * (max(graph[throttle_ch][0]) - min(graph[throttle_ch][0])),
-                 graph[throttle_ch][1][i] + 0.06 * (max(graph[throttle_ch][1]) - min(graph[throttle_ch][1])),
-                 str(i + 1))
+    plot_ej(graph[(r'$p_{04}$, кПа', r'Коэффициент эжекции, k', 'Зависимость коэффициента эжекции от давления')],
+            (r'$p_{04}$, кПа', r'Коэффициент эжекции, k', 'Зависимость коэффициента эжекции от давления'))
     length_plot(sensor_info, data_dict)
 
 
@@ -282,7 +333,12 @@ if __name__ == '__main__':
         (r'$p_{04}$, кПа', r'$\eta$', 'Title_4'): (p_04, eff_list, p_04_tns, eff_list_tns)
     }  # Оси и легенды графиков 1-4
 
+    max_comp_ratio = comp_ratio_report(comp_ratio_list_tns + comp_ratio_list)
+    average_ej_coeff = ej_coeff_report(ej_coeff_list)
+    max_efficiency, max_p_04 = efficiency_report(eff_list, p_04)
+
     maximize = ((r'$p_{04}$, МПа', r'$\varepsilon$', 'Title_3'), (r'$p_{04}$, МПа', r'$\eta$', 'Title_4'))
+
     checkbox = 'mass_flow'
     if checkbox == 'throttle':
         throttle_plot(graph, sensor_info, data_dict)

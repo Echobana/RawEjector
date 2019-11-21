@@ -40,12 +40,20 @@ class MyWindow(QtWidgets.QWidget):
         self.solveBrowse = QtWidgets.QPushButton('Plot', self)
         self.solveBrowse.clicked.connect(self.btnSolveClicked)
 
+        self.throttle_btn = QtWidgets.QPushButton('Throttle')
+        self.massflow_btn = QtWidgets.QPushButton('Mass Flow')
+        self.massflow_btn.setCheckable(True)
+        self.throttle_btn.setCheckable(True)
+        # self.throttle_btn.clicked[bool].connect(self.setType)
+        # self.massflow_btn.clicked[bool].connect(self.setType)
+
         self.vbox_main = QtWidgets.QVBoxLayout()
         self.hbox_main = QtWidgets.QHBoxLayout()
 
         self.vbox_mid = QtWidgets.QVBoxLayout()
         self.vbox_mid.addWidget(self.dataLabel)
         self.vbox_mid.addWidget(self.sensorLabel)
+        # self.vbox_mid.addWidget(self.checkboxLabel)
 
         self.vbox_left = QtWidgets.QVBoxLayout()
         self.vbox_left.addWidget(self.dataEdit)
@@ -71,6 +79,19 @@ class MyWindow(QtWidgets.QWidget):
         fname = QtWidgets.QFileDialog.getOpenFileName(self)[0]
         self.sensorEdit.setText(fname)
 
+    def setType(self, pressed):
+        source = self.sender()
+
+        if pressed:
+            val = 255
+        else:
+            val = 0
+
+        if source.text() == 'Throttle':
+            self.col.setThrottle(val)
+        elif source.text() == 'Mass Flow':
+            self.col.setMassFlow(val)
+
     def btnSolveClicked(self):
         data = hdl.opener(self.dataEdit.text())
         sensor_info = hdl.opener(self.sensorEdit.text())
@@ -82,7 +103,7 @@ class MyWindow(QtWidgets.QWidget):
         p_or_tns, p_01_tns, p_04_tns, p_02_tns, ej_coeff_list_tns, comp_ratio_list_tns, eff_list_tns = hdl.solver(trans)
 
         self.graph = {
-            (r'Коэффициент эжекции, k', r'$p_{02}$, кПа',  'Title_1'): (
+            (r'Коэффициент эжекции, k', r'$p_{02}$, кПа', 'Title_1'): (
                 ej_coeff_list, p_02, ej_coeff_list_tns, p_02_tns),
             (r'$p_{04}$, кПа', r'$p_{02}$, кПа', 'Title_2'): (p_04, p_02, p_04_tns, p_02_tns),
             (r'$p_{04}$, кПа', r'$\varepsilon$', 'Title_3'): (p_04, comp_ratio_list, p_04_tns, comp_ratio_list_tns),
@@ -109,4 +130,3 @@ if __name__ == '__main__':
     window.setFixedSize(350, 150)
     window.show()
     sys.exit(app.exec_())
-
