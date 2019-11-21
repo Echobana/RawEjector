@@ -343,19 +343,6 @@ def pdf_saver(path):
     pdf.close()
 
 
-# d_orifice = 3.03
-# d_cr = 4.28
-# d_a = 12.36
-# alpha = 10
-# d_cc = 25
-# mu_orifice = 0.98
-# mu_nozzle = 0.98
-# R_air = 287
-# A_k = 0.685
-# k = 1.4
-# T = 298
-
-
 if __name__ == '__main__':
     parameters_file = r'./parameters'
     data_file = os.path.abspath(r"F:\ejector_raw_files\2")
@@ -384,7 +371,6 @@ if __name__ == '__main__':
     k = 1.4
     A_k = 0.685
     R_air = 287
-
 
     ver_data = verification(sensor_info.T, data)
 
