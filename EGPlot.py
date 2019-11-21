@@ -98,9 +98,9 @@ class MyWindow(QtWidgets.QWidget):
         ver_data = hdl.verification(sensor_info.T, data)
 
         data_dict = hdl.av(ver_data)
-        p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list = hdl.solver(data_dict)
+        p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list, m1_list, m2_list = hdl.solver(data_dict)
         trans = hdl.transient(ver_data)
-        p_or_tns, p_01_tns, p_04_tns, p_02_tns, ej_coeff_list_tns, comp_ratio_list_tns, eff_list_tns = hdl.solver(trans)
+        p_or_tns, p_01_tns, p_04_tns, p_02_tns, ej_coeff_list_tns, comp_ratio_list_tns, eff_list_tns, m1_list_tns, m2_list_tns = hdl.solver(trans)
 
         self.graph = {
             (r'Коэффициент эжекции, k', r'$p_{02}$, кПа', 'Title_1'): (
@@ -114,7 +114,7 @@ class MyWindow(QtWidgets.QWidget):
         # fig0, ax0 = plt.subplots()
         # ax0.scatter(0, 1)
         # plt.show()
-        hdl.mult_plot(self.graph)
+        hdl.mult_plot(self.graph, sensor_info, data_dict)
         hdl.length_plot(sensor_info, data_dict)
         hdl.pdf_saver(r'./result.pdf')
 

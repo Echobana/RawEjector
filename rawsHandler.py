@@ -44,13 +44,6 @@ def find_max(xval, yval, n=4):
     return max_x, np.polyval(array, max_x)
 
 
-# def set_sensor_instance(path):
-#     sensor_info = (opener(r'./sensor_status')).T
-#     sensors = list()
-#     for i in range(len(sensor_info)):
-#         sensors.append(Sensor(*sensor_info[i]))
-
-
 def atma_to_mpa(p):
     return (0.0980665 * p) * 1000
 
@@ -167,20 +160,24 @@ def solver(data_dict):
     ej_coeff_list = []
     comp_ratio_list = []
     eff_list = []
+    m1_list = []
+    m2_list = []
     p_or = list(map(atma_to_mpa, data_dict['or']))
     p_01 = list(map(atma_to_mpa, data_dict[100]))
     p_02 = list(map(atma_to_mpa, data_dict[200]))
     p_04 = list(map(atma_to_mpa, data_dict[400]))
     for i in range(len(data_dict['or'])):
-        m2_cur = mass_flow(mu_orifice, area(d_orifice), p_or[i], A_k, R_air, T)
-        m1_cur = mass_flow(mu_nozzle, area(d_cr), p_01[i], A_k, R_air, T)
+        m2_cur = mass_flow(mu_orifice, area(d_orifice), 1000 * p_or[i], A_k, R_air, T)
+        m1_cur = mass_flow(mu_nozzle, area(d_cr), 1000 * p_01[i], A_k, R_air, T)
         ej_coeff_cur = m2_cur / m1_cur
         comp_ratio_cur = p_04[i] / p_02[i]
         eff_cur = eff(ej_coeff_cur, p_04[i], p_02[i], p_01[i], k)
         ej_coeff_list.append(ej_coeff_cur)
         comp_ratio_list.append(comp_ratio_cur)
         eff_list.append(eff_cur)
-    return p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list
+        m1_list.append(m1_cur)
+        m2_list.append(m2_cur)
+    return p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list, m1_list, m2_list
 
 
 def ej_coeff_report(ej_coeff_list):
@@ -196,12 +193,6 @@ def comp_ratio_report(comp_ratio_list):
 
 def plot_ej(data_list, title_list):
     default_plot(data_list, title_list)
-
-
-def efficiency_report(efficiency_list, pressure_list):
-    max_efficiency = max(efficiency_list)
-    max_efficiency_index = efficiency_list.index(max_efficiency)
-    return max_efficiency, pressure_list[max_efficiency_index]
 
 
 def plot_p04comp(data_list, title_list):
@@ -247,15 +238,63 @@ def plot_p04p02(data_list, title_list):
     default_plot(data_list, title_list)
 
 
-def text():
+def concat2(list_1, list_2):
+    return list_1 + list_2
+
+
+def experiment_parameters(m1_list, m1_list_tns, m2_list, m2_list_tns, p_01, p_01_tns, ej_coeff_list, params):
     fig, ax = plt.subplots()
     ax.axis('off')
-    text = 'Параметры эксперимента:\n$\\varepsilon$'
-    plt.text(0., 1., text, ha='left', va='center', transform=ax.transAxes, fontsize='11')
+    m1 = concat2(m1_list, m1_list_tns)
+    m2 = concat2(m2_list, m2_list_tns)
+    p_01l = concat2(p_01, p_01_tns)
+    m1_min, m1_max = min(m1), max(m1)
+    m2_min, m2_max = min(m2), max(m2)
+    p_01_min, p_01_max = min(p_01l), max(p_01l)
+    text = 'Сопло: \n' \
+           '$d_{{кр}}$={0:.2f} мм \n' \
+           '$d_{{a}}$={1:.2f} мм\n' \
+           '${{\\alpha}}^o$={2:.2f}${{^o}}$ \n' \
+           '${{\\mu_{{c}}}}$={3:.2f} \n' \
+           '$D_{{кс}}$={4:.2f} мм\n' \
+           '$L_{{кс}}$={5:.2f} мм\n' \
+           'Диффузор: \n' \
+           '${{\\alpha}}_{{вых}}^o$={6:.2f} \n' \
+           '$D_{{вых}}$={7:.2f} мм\n\n' \
+           'Расходомерная шайба: \n' \
+           '$d_{{ш}}$={8:.2f} мм\n' \
+           '${{\\mu}}_{{c}}$={9:.2f} \n\n' \
+           'Параметры эксперимента: \n\n' \
+           'Активный газ - воздух, $T_{{01}}$={10:.2f} \n' \
+           'Пассивный газ - воздух, $T_{{02}}$={11:.2f} \n' \
+           '$p_{{01}}$={12:.2f}...{13:.2f} кПа \n' \
+           '$m_{{1}}$={14:.2f}...{15:.2f} г/c \n' \
+           '$m_{{2}}$={16:.2f}...{17:.2f} г/c \n' \
+           '$k_{{cр}}$={18:.2f} \n\n' \
+        .format(params[0],  # d_cr
+                params[1],  # d_a
+                params[2],  # alpha
+                params[3],  # mu_nozzle
+                params[4],  # D_cc
+                params[5],  # L_cc
+                params[6],  # alpha_outlet
+                params[7],  # D_outlet
+                params[8],  # d_orifice
+                params[9],  # mu_nozzle
+                params[10],  # T_01
+                params[11],  # T_02
+                p_01_min,  # p_left
+                p_01_max,  # p_right
+                1000 * m1_min,  # m1_left
+                1000 * m1_max,  # m1_right
+                1000 * m2_min,  # m2_left
+                1000 * m2_max,  # m2_right
+                ej_coeff_report(ej_coeff_list)
+                )
+    plt.text(0., 1., text, ha='left', va='top', transform=ax.transAxes, fontsize='11')
 
 
 def mult_plot(graph, sensor_info, data_dict):
-    text()
     plot_p04p02(graph[(r'$p_{04}$, кПа', r'$p_{02}$, кПа', 'Title_2')], (r'$p_{04}$, кПа', r'$p_{02}$, кПа', 'Title_2'))
     plot_p04comp(graph[(r'$p_{04}$, кПа', r'$\varepsilon$', 'Title_3')],
                  (r'$p_{04}$, кПа', r'$\varepsilon$', 'Title_3'))
@@ -304,29 +343,59 @@ def pdf_saver(path):
     pdf.close()
 
 
-d_orifice = 3.03
-d_cr = 4.28
-mu_orifice = 0.98
-mu_nozzle = 0.98
-R_air = 287
-A_k = 0.685
-k = 1.4
-T = 298
+# d_orifice = 3.03
+# d_cr = 4.28
+# d_a = 12.36
+# alpha = 10
+# d_cc = 25
+# mu_orifice = 0.98
+# mu_nozzle = 0.98
+# R_air = 287
+# A_k = 0.685
+# k = 1.4
+# T = 298
+
 
 if __name__ == '__main__':
+    parameters_file = r'./parameters'
     data_file = os.path.abspath(r"F:\ejector_raw_files\2")
     sensor_file = os.path.abspath(r"F:\ejector_raw_files\sensor_status")
 
     data = opener(data_file)
     sensor_info = opener(sensor_file)
+    parameters = opener(parameters_file)
+    params = []
+    for line in parameters:
+        params.append(line[1])
+    print(params)
+
+    d_cr = params[0]
+    d_a = params[1]
+    alpha = params[2]
+    mu_nozzle = params[3]
+    d_cc = params[4]
+    l_cc = params[5]
+    alpha_2 = params[6]
+    d_out = params[7]
+    d_orifice = params[8]
+    mu_orifice = params[9]
+    T = params[10]
+    T_02 = params[11]
+    k = 1.4
+    A_k = 0.685
+    R_air = 287
+
 
     ver_data = verification(sensor_info.T, data)
 
     data_dict = av(ver_data)
-    p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list = solver(data_dict)
+    p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list, m1_list, m2_list = solver(data_dict)
 
     trans = transient(ver_data)
-    p_or_tns, p_01_tns, p_04_tns, p_02_tns, ej_coeff_list_tns, comp_ratio_list_tns, eff_list_tns = solver(trans)
+
+    p_or_tns, p_01_tns, p_04_tns, p_02_tns, \
+    ej_coeff_list_tns, comp_ratio_list_tns, eff_list_tns, m1_list_tns, m2_list_tns = solver(
+        trans)
 
     graph = {
         (r'$p_{04}$, кПа', r'Коэффициент эжекции, k', 'Зависимость коэффициента эжекции от давления'): (
@@ -336,17 +405,13 @@ if __name__ == '__main__':
         (r'$p_{04}$, кПа', r'$\eta$', 'Title_4'): (p_04, eff_list, p_04_tns, eff_list_tns)
     }  # Оси и легенды графиков 1-4
 
-    max_comp_ratio = comp_ratio_report(comp_ratio_list_tns + comp_ratio_list)
-    average_ej_coeff = ej_coeff_report(ej_coeff_list)
-    print(average_ej_coeff)
-    max_efficiency, max_p_04 = efficiency_report(eff_list, p_04)
-
     maximize = ((r'$p_{04}$, МПа', r'$\varepsilon$', 'Title_3'), (r'$p_{04}$, МПа', r'$\eta$', 'Title_4'))
 
     checkbox = 'mass_flow'
     if checkbox == 'throttle':
         throttle_plot(graph, sensor_info, data_dict)
     elif checkbox == 'mass_flow':
+        experiment_parameters(m1_list, m1_list_tns, m2_list, m2_list_tns, p_01, p_01_tns, ej_coeff_list, params)
         mult_plot(graph, sensor_info, data_dict)
     else:
         print('did not find')
