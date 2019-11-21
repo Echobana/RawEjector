@@ -401,8 +401,9 @@ if __name__ == '__main__':
 
     maximize = ((r'$p_{04}$, МПа', r'$\varepsilon$', 'Title_3'), (r'$p_{04}$, МПа', r'$\eta$', 'Title_4'))
 
-    checkbox = 'mass_flow'
+    checkbox = 'throttle'
     if checkbox == 'throttle':
+        experiment_parameters(m1_list, m1_list_tns, m2_list, m2_list_tns, p_01, p_01_tns, ej_coeff_list, params)
         throttle_plot(graph, sensor_info, data_dict)
     elif checkbox == 'mass_flow':
         experiment_parameters(m1_list, m1_list_tns, m2_list, m2_list_tns, p_01, p_01_tns, ej_coeff_list, params)

@@ -42,9 +42,11 @@ class MyWindow(QtWidgets.QWidget):
         self.parametersBrowse = QtWidgets.QPushButton('Browse', self)
         self.parametersBrowse.clicked.connect(self.btnParametersClicked)
 
-
-        self.save = QtWidgets.QPushButton('Save', self)
+        self.save = QtWidgets.QPushButton('Расходная', self)
         self.save.clicked.connect(self.btnSaveClicked)
+
+        self.saveThrottle = QtWidgets.QPushButton('Дроссельная', self)
+        self.saveThrottle.clicked.connect(self.btnThrottleSaveClicked)
         # self.throttle_btn = QtWidgets.QPushButton('Throttle')
         # self.massflow_btn = QtWidgets.QPushButton('Mass Flow')
         # self.massflow_btn.setCheckable(True)
@@ -76,6 +78,7 @@ class MyWindow(QtWidgets.QWidget):
         self.hbox_main.addLayout(self.vbox_right)
         self.vbox_main.addLayout(self.hbox_main)
         self.vbox_main.addWidget(self.save)
+        self.vbox_main.addWidget(self.saveThrottle)
 
         self.setLayout(self.vbox_main)
 
@@ -104,7 +107,6 @@ class MyWindow(QtWidgets.QWidget):
         elif source.text() == 'Mass Flow':
             self.col.setMassFlow(val)
 
-
     def btnSaveClicked(self):
         fname = QtWidgets.QFileDialog.getSaveFileName(self)[0]
         data = hdl.opener(self.dataEdit.text())
@@ -132,10 +134,42 @@ class MyWindow(QtWidgets.QWidget):
         # fig0, ax0 = plt.subplots()
         # ax0.scatter(0, 1)
         # plt.show()
+        hdl.experiment_parameters(m1_list, m1_list_tns, m2_list, m2_list_tns, p_01, p_01_tns, ej_coeff_list, params)
         hdl.mult_plot(self.graph, sensor_info, data_dict)
         hdl.pdf_saver(fname)
         QtWidgets.qApp.quit()
 
+    def btnThrottleSaveClicked(self):
+        fname = QtWidgets.QFileDialog.getSaveFileName(self)[0]
+        data = hdl.opener(self.dataEdit.text())
+        sensor_info = hdl.opener(self.sensorEdit.text())
+        parameters_file = self.parametersEdit.text()
+
+        params = hdl.set_experiment_parameters(parameters_file)
+        ver_data = hdl.verification(sensor_info.T, data)
+        data_dict = hdl.av(ver_data)
+        p_or, p_01, p_04, p_02, ej_coeff_list, comp_ratio_list, eff_list, m1_list, m2_list = hdl.solver(data_dict,
+                                                                                                        params)
+        trans = hdl.transient(ver_data)
+        p_or_tns, p_01_tns, p_04_tns, p_02_tns, ej_coeff_list_tns, comp_ratio_list_tns, eff_list_tns, m1_list_tns, m2_list_tns = hdl.solver(
+            trans, params)
+
+        self.graph = {
+            (r'$p_{04}$, кПа', r'Коэффициент эжекции, k', 'Зависимость коэффициента эжекции от давления'): (
+                ej_coeff_list, p_02, ej_coeff_list_tns, p_02_tns),
+            (r'$p_{04}$, кПа', r'$p_{02}$, кПа', 'Title_2'): (p_04, p_02, p_04_tns, p_02_tns),
+            (r'$p_{04}$, кПа', r'$\varepsilon$', 'Title_3'): (p_04, comp_ratio_list, p_04_tns, comp_ratio_list_tns),
+            (r'$p_{04}$, кПа', r'$\eta$', 'Title_4'): (p_04, eff_list, p_04_tns, eff_list_tns)
+        }  # Оси и легенды графиков 1-4
+
+        # maximize = ((r'$p_{04}$, МПа', r'$\varepsilon$', 'Title_3'), (r'$p_{04}$, МПа', r'$\eta$', 'Title_4'))
+        # fig0, ax0 = plt.subplots()
+        # ax0.scatter(0, 1)
+        # plt.show()
+        hdl.experiment_parameters(m1_list, m1_list_tns, m2_list, m2_list_tns, p_01, p_01_tns, ej_coeff_list, params)
+        hdl.throttle_plot(self.graph, sensor_info, data_dict)
+        hdl.pdf_saver(fname)
+        QtWidgets.qApp.quit()
 
 
 if __name__ == '__main__':
